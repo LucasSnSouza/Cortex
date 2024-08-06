@@ -4,6 +4,15 @@ class Utils():
     def __init__(self, storage):
         self.storage = storage
 
+    def getLibraryPath(self, extendedPath: str = ""):
+        """  """
+
+        getter_path = f"{os.path.dirname(os.path.abspath(__file__))}/{extendedPath}"
+        if "?" in getter_path:
+            return getter_path[4:]
+        else:
+            return getter_path
+
     def getDictPath(self, extendedPath: str = ""):
         """  """
 
@@ -81,7 +90,7 @@ class Utils():
     
     def getJsonFile(self, location: str, file: str) -> object:
         """  """
-
+        
         with open(f"{location}/{file}", 'r', encoding='utf-8') as archive:
             return json.load(archive)
     
@@ -112,7 +121,10 @@ class Utils():
                     )
                 elif insert.get('action') == "storage":
                     for item in insert['data']:
-                        self.setRegister(insert['storage'], item)
+                        if '__external__' in item:
+                            self.setRegister(insert['storage'], self.getJsonFile(location, item['__external__']))
+                        else:
+                            self.setRegister(insert['storage'], item)
 
         print(f"Manifest Load: {manifest['name']}, v{manifest['version'].get('current')}, {len(manifest.get('inserts'))} Insert(s)")
 
