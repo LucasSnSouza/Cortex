@@ -1,4 +1,4 @@
-import Range, random, copy, math # type: ignore
+import Range, random, copy, math, os # type: ignore
 from mathutils import Vector, Matrix, Euler, noise # type: ignore
 
 class Behavior():
@@ -37,11 +37,6 @@ class Behavior():
         return (finded if len(finded) > 1 else finded[0] if finded else None)
 
     # Setters
-
-    def setDefaultInterface(self):
-        """  """
-
-        self.utils.setLibrary(f"{self.utils.getLibraryPath('/bin')}/template_interface.range", "Interface")
 
     def SetValue(self, object: object, variable: str, value):
         """  """
@@ -154,6 +149,40 @@ class Behavior():
 
         return target.worldPosition
     
+    def SetExternalCode(self, locale: str):
+        locale = self.utils.getResolvePath(locale)
+        with open(locale, 'r') as file:
+            exec(file.read())
+
+    def SetSaveScene(self, locale: str, file: str, tag: str = None, scene = Range.logic.getCurrentScene()):
+        locale = self.utils.getResolvePath(locale)
+        instances = None
+        if tag:
+            instances = self.getInstanceBy(tag, scene.objects)
+        else:
+            instances = scene.objects
+
+        if instances:
+            formInstances = []
+            for instance in instances:
+                formInstances.append({
+                    "name": instance.name,
+                    "position": list(instance.worldPosition),
+                    "color": list(instance.color)
+                })
+            self.utils.setJsonFile(locale, file, formInstances)
+        else:
+            return instances
+    
+    def SetLoadScene(self, locale: str, file: str, scene = Range.logic.getCurrentScene()):
+        locale = self.utils.getResolvePath(locale)
+        
+        if file:
+            instances = self.utils.getJsonFile(locale, file)
+            for instance in instances:
+                wrapper = scene.addObject(instance['name'], scene.objects[0])
+                wrapper.worldPosition = instance['position']
+        
     # Actuators
 
     def setCameraActuator(self, target: object, actuator: str, changes: list = []):

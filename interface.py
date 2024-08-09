@@ -8,6 +8,12 @@ class Interface():
         self.storage = storage
 
     #Setters
+
+    def setDefaultInterface(self):
+        """  """
+
+        self.utils.setLibrary(f"{self.utils.getLibraryPath('/bin')}/template_interface.range", "Interface")
+
     def setRenderInterfaces(self, interfaces: list = None, scene: object = Range.logic.getCurrentScene()):
         """  """
 
@@ -41,6 +47,7 @@ class Interface():
         if component['model'] in scene.objectsInactive:
             InstanceComponent = scene.addObject(component['model'], layout)
             InstanceComponent.setParent(layout)
+            InstanceComponent['type'] = component['type']
 
             if component.get('offset'):
                 componentOffset = component['offset']
@@ -55,6 +62,30 @@ class Interface():
                 InstanceComponent.text = component['text']
             if component.get('color'):
                 InstanceComponent.color = component['color']
+            if component.get('action'):
+                InstanceComponent['action'] = component['action']['type']
+                InstanceComponent['params'] = component['action']['params']
 
             if component.get('components'):
                 self.setRenderComponents(InstanceComponent, component['components'], scene)
+
+    def SetComponentAction(self, type: str = None, action: str = None, params: object = None):
+        if type and action:
+            
+            match action:
+                case "Print":
+                    print(f"{params['text']}")
+                case "Code":
+                    self.behavior.SetExternalCode(params['locale'])
+                case "SaveScene":
+                    self.behavior.SetSaveScene(params['locale'], 'teste.json', params['tag'], self.utils.getScene(params['scene']))
+                case "LoadScene":
+                    self.behavior.SetLoadScene(params['locale'], 'teste.json', self.utils.getScene(params['scene']))
+                case "EndGame":
+                    Range.logic.endGame()
+
+            if 'action' in params:
+                self.SetComponentAction(type, params['action']['type'], params['action']['params'])
+
+        else:
+            return None

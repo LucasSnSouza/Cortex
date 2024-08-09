@@ -22,6 +22,10 @@ class Utils():
         else:
             return getter_path
         
+    def getResolvePath(self, path: str):
+        if '@' in path:
+            return os.path.normpath(path.replace('@', self.getDictPath()))
+        
     # Getters
     def getScene(self, scene: str):
         """  """
