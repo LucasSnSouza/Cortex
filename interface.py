@@ -9,39 +9,39 @@ class Interface():
 
     #Setters
 
-    def setDefaultInterface(self):
+    def SetDefaultInterface(self):
         """  """
 
-        self.utils.setLibrary(f"{self.utils.getLibraryPath('/bin')}/template_interface.range", "Interface")
+        self.utils.SetLibrary(f"{self.utils.getLibraryPath('/bin')}/template_interface.range", "Interface")
 
-    def setRenderInterfaces(self, interfaces: list = None, scene: object = Range.logic.getCurrentScene()):
+    def SetRenderInterfaces(self, interfaces: list = None, scene: object = Range.logic.getCurrentScene()):
         """  """
 
         if not interfaces == None:
             for interface in interfaces:
-                self.setInterface(interface, scene)
+                self.SetInterface(interface, scene)
         else:
             return None
         
-    def setInterface(self, interface: object, scene: object = Range.logic.getCurrentScene()):
+    def SetInterface(self, interface: object, scene: object = Range.logic.getCurrentScene()):
         """  """
 
         InstanceInterface = scene.addObject('REF_Layout', 'REF_Interface')
         if 'tag' in InstanceInterface:
             InstanceInterface['tag'] = interface.get('layout', 'unnamed')
             if interface.get('components'):
-                self.setRenderComponents(InstanceInterface, interface['components'], scene)
+                self.SetRenderComponents(InstanceInterface, interface['components'], scene)
     
-    def setRenderComponents(self, layout: object, components: list = None, scene: object = Range.logic.getCurrentScene()):
+    def SetRenderComponents(self, layout: object, components: list = None, scene: object = Range.logic.getCurrentScene()):
         """  """
 
         if not components == None:
             for component in components:
-                self.setComponent(component, layout, scene)
+                self.SetComponent(component, layout, scene)
         else:
             return None
         
-    def setComponent(self, component: object, layout: object, scene: object = Range.logic.getCurrentScene()):
+    def SetComponent(self, component: object, layout: object, scene: object = Range.logic.getCurrentScene()):
         """  """
 
         def ListRender(__list__, columns, rows, gap = [1,1]):
@@ -51,7 +51,7 @@ class Interface():
                 if object.get('__component__'):
                     object['__component__']['offset'][0] += ( column * gap[0] )
                     object['__component__']['offset'][1] += ( row * gap[1] )
-                    self.setComponent(object['__component__'], layout, scene)
+                    self.SetComponent(object['__component__'], layout, scene)
                 column += 1
                 if column >= columns:
                     column = 0
@@ -98,7 +98,7 @@ class Interface():
                     )
 
             if component.get('components'):
-                self.setRenderComponents(InstanceComponent, component['components'], scene)
+                self.SetRenderComponents(InstanceComponent, component['components'], scene)
 
     def SetComponentAction(self, type: str = None, action: str = None, params: object = None):
         if type and action:

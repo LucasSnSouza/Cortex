@@ -192,7 +192,7 @@ class Behavior():
         
     # Actuators
 
-    def setCameraActuator(self, target: object, actuator: str, changes: list = []):
+    def SetCameraActuator(self, target: object, actuator: str, changes: list = []):
         """  """
 
         if target.actuators.get(actuator):
