@@ -44,7 +44,22 @@ class Interface():
     def setComponent(self, component: object, layout: object, scene: object = Range.logic.getCurrentScene()):
         """  """
 
+        def ListRender(__list__, columns, rows, gap = [1,1]):
+            column = 0
+            row = 0
+            for indice, object in enumerate(__list__):
+                if object.get('__component__'):
+                    object['__component__']['offset'][0] += ( column * gap[0] )
+                    object['__component__']['offset'][1] += ( row * gap[1] )
+                    self.setComponent(object['__component__'], layout, scene)
+                column += 1
+                if column >= columns:
+                    column = 0
+                    row += 1
+                
+
         if component['model'] in scene.objectsInactive:
+
             InstanceComponent = scene.addObject(component['model'], layout)
             InstanceComponent.setParent(layout)
             InstanceComponent['type'] = component['type']
@@ -66,6 +81,22 @@ class Interface():
                 InstanceComponent['action'] = component['action']['type']
                 InstanceComponent['params'] = component['action']['params']
 
+            if component.get('__list__'):
+                if "@" in component['__list__']:
+                    ListRender(
+                        Range.logic.globalDict[component['__list__'].replace('@', "")],
+                        component.get('columns'),
+                        component.get('rows'),
+                        component.get('gap')
+                    )
+                else:
+                    ListRender(
+                        component['__list__'],
+                        component.get('columns'),
+                        component.get('rows'),
+                        component.get('gap')
+                    )
+
             if component.get('components'):
                 self.setRenderComponents(InstanceComponent, component['components'], scene)
 
@@ -81,6 +112,12 @@ class Interface():
                     self.behavior.SetSaveScene(params['locale'], 'teste.json', params['tag'], self.utils.getScene(params['scene']))
                 case "LoadScene":
                     self.behavior.SetLoadScene(params['locale'], 'teste.json', self.utils.getScene(params['scene']))
+                case "SetValue":
+                    if isinstance(params['variable'], list):
+                        for indice, variable in enumerate(params['variable']):
+                            self.behavior.SetValue(self.utils.getScene(params['scene']).objects[params['object']], variable, params['value'][indice])
+                    else:
+                        self.behavior.SetValue(self.utils.getScene(params['scene']).objects[params['object']], params['variable'], params['value'])
                 case "EndGame":
                     Range.logic.endGame()
 

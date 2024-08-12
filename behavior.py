@@ -7,7 +7,14 @@ class Behavior():
         self.utils = utils
 
     # Getters
-    def getMouseOver(self, distance = 99999, scene = Range.logic.getCurrentScene()) -> object:
+    def GetSquareMatrix(self, amount: int):
+        find = int(math.sqrt(len(amount)))
+        if find * find == amount:
+            return find
+        else:
+            return None
+
+    def GetMouseOver(self, distance = 99999, scene = Range.logic.getCurrentScene()) -> object:
         """  """
 
         Mouse = Range.logic.mouse.position
@@ -22,7 +29,7 @@ class Behavior():
         else:
             return {}
         
-    def getInstanceBy(self, key: str, array: list = [], value = None):
+    def GetInstanceBy(self, key: str, array: list = [], value = None):
         """  """
 
         finded = []
@@ -69,7 +76,7 @@ class Behavior():
 
         return instance
     
-    def setLookAt(self, instance: object, target: list, axi: str = "Z") -> Matrix:
+    def SetLookAt(self, instance: object, target: list, axi: str = "Z") -> Matrix:
         """  """
 
         orientation = [
