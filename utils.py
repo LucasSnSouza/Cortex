@@ -115,7 +115,7 @@ class Utils():
                     def loadLibrary(param):
                         self.SetLibrary(param['location'], param['blend'])
                         return True
-                    self.storage.setChargeFunction(
+                    self.storage.SetChargeFunction(
                         loadLibrary, 
                         {
                             "location": f"{insert['location'].replace('@', location)}/{insert['component']}", 

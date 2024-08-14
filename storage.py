@@ -4,7 +4,7 @@ class Storage():
     def __init__(self):
         self.functions = {
             'functions': {
-                    'content': self.listFunctions,
+                    'content': self.ListFunctions,
                 }
         }
         self.chargeFunctions = []
@@ -56,12 +56,12 @@ class Storage():
             "0": Range.events.ZEROKEY,
         }
 
-    def setChargeFunction(self, function, params = None):
+    def SetChargeFunction(self, function, params = None):
         """  """
         
         self.chargeFunctions.append({"function": function, "params": params})
 
-    def setCharge(self):
+    def SetCharge(self):
         """  """
 
         if len(self.chargeFunctions) != 0:
@@ -76,12 +76,12 @@ class Storage():
         else:
             return None
 
-    def listFunctions(self) -> list:
+    def ListFunctions(self) -> list:
         """  """
 
         return list(self.functions.keys())
     
-    def setFunction(self, key: str, function) -> dict:
+    def SetFunction(self, key: str, function) -> dict:
         """  """
 
         self.functions[key] = {
@@ -89,7 +89,7 @@ class Storage():
         }
         return self.functions.get(key, None)
 
-    def getFunction(self, key: str, use: bool = False) -> dict:
+    def GetFunction(self, key: str, use: bool = False) -> dict:
         """  """
 
         if use:

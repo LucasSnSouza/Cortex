@@ -8,11 +8,46 @@ class Behavior():
 
     # Getters
     def GetSquareMatrix(self, amount: int):
+        """  """
+
         find = int(math.sqrt(len(amount)))
         if find * find == amount:
             return find
         else:
             return None
+    
+    def GetVertexCenter(self, instance: object):
+        """  """
+
+        InstanceMesh = instance.meshes[0]
+        for vertice_index in range(InstanceMesh.getVertexArrayLength(0)):
+            vertice = InstanceMesh.getVertex(0, vertice_index)
+            vertice_global_position = instance.worldTransform * vertice.XYZ
+            if vertice_global_position == instance.worldPosition:
+                return {
+                    "vertice": vertice_index,
+                    "position": vertice_global_position
+                }
+            
+    def GetFarestDistanceVertex(self, instance: object):
+        """  """
+
+        InstanceMesh = instance.meshes[0]
+        farest_distance_vertex_length = -1
+        farest_distance_vertex = None
+
+        for vertice_index in range(InstanceMesh.getVertexArrayLength(0)):
+            vertice = InstanceMesh.getVertex(0, vertice_index)
+            vertice_global_position = instance.worldTransform * vertice.XYZ
+            distance = (vertice_global_position - instance.worldPosition).length
+            if distance > farest_distance_vertex_length:
+                farest_distance_vertex = distance
+                farest_distance_vertex_length = vertice_index
+        print(farest_distance_vertex_length)
+        return { 
+            "vertice": farest_distance_vertex, 
+            "distance": farest_distance_vertex_length 
+        } 
 
     def GetMouseOver(self, distance = 99999, scene = Range.logic.getCurrentScene()) -> object:
         """  """
@@ -44,6 +79,60 @@ class Behavior():
         return (finded if len(finded) > 1 else finded[0] if finded else None)
 
     # Setters
+
+    def SetTerrainPaint(self, instance: object, waterLevel: float = 1.0):
+        """  """
+
+        InstanceMesh = instance.meshes[0]
+        for vertice_index in range(InstanceMesh.getVertexArrayLength(0)):
+            vertice = InstanceMesh.getVertex(0, vertice_index)
+            vertice_global_position = instance.worldTransform * vertice.XYZ
+
+            vertice.color = [0.0,1.0,0.0,1.0]
+
+            if vertice.normal[2] < 0.60:
+                vertice.color = [0.0,0.0,0.1,1.0]
+            
+            if vertice_global_position[2] < waterLevel:
+                vertice.color = [1.0,0.0,0.0,1.0]
+
+    def SetGenerateTerrain(self, instance: object, island: bool = False):
+        """  """
+
+        instance.worldPosition = [
+            random.uniform(-100,100),
+            random.uniform(-100,100),
+            random.uniform(-100,100),
+        ]
+
+        InstanceMesh = instance.meshes[0]
+        main_vertice = ( instance.worldTransform * InstanceMesh.getVertex(0, self.GetVertexCenter(instance)['vertice']).XYZ )
+        farest_length_vertex = 20.0
+        
+        for vertice_index in range(InstanceMesh.getVertexArrayLength(0)):
+            vertice = InstanceMesh.getVertex(0, vertice_index)
+            vertice_global_position = instance.worldTransform * vertice.XYZ
+            distance = (vertice_global_position - main_vertice).length
+            inverted_distance = max(0.0, farest_length_vertex - distance)
+
+            hetero_terrain_type = noise.fractal(vertice_global_position * 0.2, 1.0, 200.0, 8)
+            fractal_terrain_type = noise.multi_fractal(vertice_global_position * 0.003, 1.0, 100.0, 6)
+            vertice.z = (hetero_terrain_type * fractal_terrain_type) * -inverted_distance 
+
+        instance.worldPosition = [0,0,0]
+
+    def SetRecalculateNormals(self, instance: object):
+        """  """
+
+        InstanceMesh = instance.meshes[0]
+
+        for polygon in InstanceMesh.polygons:
+            v1 = InstanceMesh.getVertex(0, polygon.v1).XYZ - InstanceMesh.getVertex(0, polygon.v2).XYZ
+            v2 = InstanceMesh.getVertex(0, polygon.v3).XYZ - InstanceMesh.getVertex(0, polygon.v2).XYZ
+
+            for vertice in polygon.vertices:
+                vertice.normal = v2.cross(v1).normalized()
+        instance.reinstancePhysicsMesh()
 
     def SetValue(self, object: object, variable: str, value):
         """  """
