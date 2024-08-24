@@ -43,7 +43,6 @@ class Behavior():
             if distance > farest_distance_vertex_length:
                 farest_distance_vertex = distance
                 farest_distance_vertex_length = vertice_index
-        print(farest_distance_vertex_length)
         return { 
             "vertice": farest_distance_vertex, 
             "distance": farest_distance_vertex_length 
@@ -79,6 +78,10 @@ class Behavior():
         return (finded if len(finded) > 1 else finded[0] if finded else None)
 
     # Setters
+
+    def SetAddObject(self, instance: str, reference: str, scene = Range.logic.getCurrentScene()):
+        #instance = scene.addObject(instance, reference)
+        return scene.addObject(instance, reference)
 
     def SetTerrainPaint(self, instance: object, waterLevel: float = 1.0):
         """  """
@@ -136,8 +139,8 @@ class Behavior():
 
     def SetValue(self, object: object, variable: str, value):
         """  """
-
-        if(object.get(variable, False)):
+        
+        if variable in object:
             object[variable] = value
             return object[variable]
         else:
@@ -164,6 +167,12 @@ class Behavior():
             instance.worldPosition = target + Vector(offset[0])
 
         return instance
+    
+    def SetPositionGrid(self, instance: object, gap: float = 1.0, useMouse = False):
+        if useMouse:
+            Colide = self.GetMouseOver()
+            if Colide:
+                instance.worldPosition = Colide['object'].worldPosition + Colide['normal'] / gap
     
     def SetLookAt(self, instance: object, target: list, axi: str = "Z") -> Matrix:
         """  """

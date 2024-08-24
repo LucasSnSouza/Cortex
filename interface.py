@@ -6,13 +6,40 @@ class Interface():
         self.behavior = behavior
         self.utils = utils
         self.storage = storage
+        self.view = None
+        self.modal = None
 
-    #Setters
+
+    # Getters
+
+    def GetCurrentView(self) -> str:
+        if self.view != None:
+            return self.view['tag'], self.view
+
+    # Setters
 
     def SetDefaultInterface(self):
         """  """
 
         self.utils.SetLibrary(f"{self.utils.getLibraryPath('/bin')}/template_interface.range", "Interface")
+
+    def SetView(self, view: str, scene: object = Range.logic.getCurrentScene()) -> object:
+        """  """
+        if self.view == None:
+            self.view = self.behavior.GetInstanceBy("tag", scene.objects, view)
+            self.view.worldPosition = [0,0,0]
+        else:
+            self.view.worldPosition = [0,0,999]
+            self.view = self.behavior.GetInstanceBy("tag", scene.objects, view)
+            self.view.worldPosition = [0,0,0]
+
+        return self.view
+
+    def SetModal(self, instance: str, scene: object = Range.logic.getCurrentScene()):
+        if self.modal == None:
+            pass
+        else: 
+            pass
 
     def SetRenderInterfaces(self, interfaces: list = None, scene: object = Range.logic.getCurrentScene()):
         """  """
@@ -31,6 +58,9 @@ class Interface():
             InstanceInterface['tag'] = interface.get('layout', 'unnamed')
             if interface.get('components'):
                 self.SetRenderComponents(InstanceInterface, interface['components'], scene)
+            InstanceInterface.worldPosition = [100, 100, 0]
+        else:
+            print('NOT: Não foi encontrado uma tag sobre o perfil de layout')
     
     def SetRenderComponents(self, layout: object, components: list = None, scene: object = Range.logic.getCurrentScene()):
         """  """
@@ -77,6 +107,12 @@ class Interface():
                 InstanceComponent.text = component['text']
             if component.get('color'):
                 InstanceComponent.color = component['color']
+            if component.get('scale'):
+                InstanceComponent.worldScale = [
+                    component['scale'][0],
+                    component['scale'][1],
+                    0.0
+                ]
             if component.get('action'):
                 InstanceComponent['action'] = component['action']['type']
                 InstanceComponent['params'] = component['action']['params']
@@ -101,23 +137,30 @@ class Interface():
                 self.SetRenderComponents(InstanceComponent, component['components'], scene)
 
     def SetComponentAction(self, type: str = None, action: str = None, params: object = None):
+        """  """
+
         if type and action:
-            
             match action:
                 case "Print":
                     print(f"{params['text']}")
                 case "Code":
                     self.behavior.SetExternalCode(params['locale'])
                 case "SaveScene":
-                    self.behavior.SetSaveScene(params['locale'], 'teste.json', params['tag'], self.utils.getScene(params['scene']))
+                    self.behavior.SetSaveScene(params['locale'], 'teste.json', params['tag'], self.utils.GetScene(params['scene']))
                 case "LoadScene":
-                    self.behavior.SetLoadScene(params['locale'], 'teste.json', self.utils.getScene(params['scene']))
+                    self.behavior.SetLoadScene(params['locale'], 'teste.json', self.utils.GetScene(params['scene']))
                 case "SetValue":
                     if isinstance(params['variable'], list):
                         for indice, variable in enumerate(params['variable']):
-                            self.behavior.SetValue(self.utils.getScene(params['scene']).objects[params['object']], variable, params['value'][indice])
+                            self.behavior.SetValue(self.utils.GetScene(params['scene']).objects[params['object']], variable, params['value'][indice])
                     else:
-                        self.behavior.SetValue(self.utils.getScene(params['scene']).objects[params['object']], params['variable'], params['value'])
+                        self.behavior.SetValue(self.utils.GetScene(params['scene']).objects[params['object']], params['variable'], params['value'])
+                case "SetAddObject":
+                    self.behavior.SetAddObject(params['object'], params['reference'], self.utils.GetScene(params['scene']))
+                case "SetView":
+                    self.SetView(params['view'], self.utils.GetScene(params['scene']))
+                case "SetModal":
+                    self.SetView(params['modal'], self.utils.GetScene(params['scene']))
                 case "EndGame":
                     Range.logic.endGame()
 

@@ -32,6 +32,13 @@ class Utils():
         
         return Range.logic.getSceneList().get(scene, None)
     
+    def GetRoundedArray(self, array: list) -> list:
+        rouded = []
+        for indice in array:
+            if isinstance(indice, int) or isinstance(indice, float):
+                rouded.append(round(indice))
+        return rouded
+    
     def GetDictList(self, dict: str, form: dict = None) -> list:
         """
             Lista diretórios de um caminho fornecido com um sistema de filtragem robusto para buscas.
@@ -126,7 +133,15 @@ class Utils():
                 elif insert.get('action') == "storage":
                     for item in insert['data']:
                         if '__external__' in item:
-                            self.SetRegister(insert['storage'], self.GetJsonFile(location, item['__external__']))
+                            external_content_data = self.GetJsonFile(location, item['__external__'])
+                            if isinstance(external_content_data, dict):
+                                self.SetRegister(insert['storage'], self.GetJsonFile(location, item['__external__']))
+                            elif isinstance(external_content_data, list):
+                                for data in external_content_data:
+                                   self.SetRegister(insert['storage'], data)
+                            else:
+                                print("NOT: O tipo do valor externo não correponde ao esperado")
+
                         else:
                             self.SetRegister(insert['storage'], item)
 
