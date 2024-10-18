@@ -26,11 +26,11 @@ class Interface():
     def SetView(self, view: str, scene: object = Range.logic.getCurrentScene()) -> object:
         """  """
         if self.view == None:
-            self.view = self.behavior.GetInstanceBy("tag", scene.objects, view)
+            self.view = self.behavior.FindInstance("tag", scene.objects, view)
             self.view.worldPosition = [0,0,0]
         else:
             self.view.worldPosition = [0,0,999]
-            self.view = self.behavior.GetInstanceBy("tag", scene.objects, view)
+            self.view = self.behavior.FindInstance("tag", scene.objects, view)
             self.view.worldPosition = [0,0,0]
 
         return self.view

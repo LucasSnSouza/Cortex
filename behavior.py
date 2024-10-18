@@ -62,26 +62,34 @@ class Behavior():
             return {"object": hitObject, "position": hitPosition, "normal": hitNormal}
         else:
             return {}
-        
-    def GetInstanceBy(self, key: str, array: list = [], value = None):
-        """  """
-
-        finded = []
+    
+    def FindInstance(self, key: str, array: list, value = None):
         for instance in array:
             if value != None:
                 if key in instance and instance[key] == value:
-                    finded.append(instance)
+                    return instance
             else:
                 if key in instance:
-                    finded.append(instance)
-        
-        return (finded if len(finded) > 1 else finded[0] if finded else None)
-
+                    return instance
+                
+    def FindAllInstance(self, key: str, array: list, value = None):
+        list_instances = []
+        for instance in array:
+            if value != None:
+                if key in instance and instance[key] == value:
+                    list_instances.append(instance)
+            else:
+                if key in instance:
+                    list_instances.append(instance)
+        return list_instances
+    
     # Setters
 
     def SetAddObject(self, instance: str, reference: str, scene = Range.logic.getCurrentScene()):
-        #instance = scene.addObject(instance, reference)
         return scene.addObject(instance, reference)
+    
+    def SetEndObject(self, instance: str):
+        return instance.endObject()
 
     def SetTerrainPaint(self, instance: object, waterLevel: float = 1.0):
         """  """
@@ -168,11 +176,8 @@ class Behavior():
 
         return instance
     
-    def SetPositionGrid(self, instance: object, gap: float = 1.0, useMouse = False):
-        if useMouse:
-            Colide = self.GetMouseOver()
-            if Colide:
-                instance.worldPosition = Colide['object'].worldPosition + Colide['normal'] / gap
+    def SetPositionGrid(self, mouse_sensor: object, instance: object, gap: float = 1.0):
+        instance.worldPosition = mouse_sensor.hitObject.worldPosition + mouse_sensor.hitNormal / gap
     
     def SetLookAt(self, instance: object, target: list, axi: str = "Z") -> Matrix:
         """  """
@@ -192,19 +197,41 @@ class Behavior():
         )
 
         return instance.worldOrientation
+    
+    def SetApplyRotation(self, instance: object, speed: float, direction_proxy = ['H', 'V']):
 
-    def CharacterMoviment(self, instance: object, speed: float = 0.001, onOrientation: bool = True) -> Vector:
+        HDirection = Range.logic.keyboard.inputs[Range.events.PAD6].active - Range.logic.keyboard.inputs[Range.events.PAD4].active
+        VDirection = Range.logic.keyboard.inputs[Range.events.PAD8].active - Range.logic.keyboard.inputs[Range.events.PAD2].active
+        Delta = Range.logic.deltaTime()
+
+        instance.applyRotation([0.0, VDirection * speed, HDirection * speed], True)
+    
+    def SetMouseLook(self, instance: object):
+        """  """
+
+        delta = Range.logic.mouse.deltaPosition
+        instance.applyRotation([0 , 0, delta[0]], 0)
+        instance.applyRotation([delta[1] , 0, 0], 1)
+    
+    def SetLookForwardCamera(self, instance, camera):
+        """  """
+
+        instance.lookAt(camera.worldOrientation.col[1], 1, 0.1)
+        instance.lookAt([0,0,1], 2, 1)
+
+    def CharacterMoviment(self, instance: object, speed: float = 1.0, orientation: bool = True) -> Vector:
         """  """
 
         CharacterWrapper = Range.constraints.getCharacter(instance)
 
-        XDirection = Range.logic.keyboard.inputs[Range.events.WKEY].active - Range.logic.keyboard.inputs[Range.events.SKEY].active
-        YDirection = Range.logic.keyboard.inputs[Range.events.AKEY].active - Range.logic.keyboard.inputs[Range.events.DKEY].active
+        XDirection = Range.logic.keyboard.inputs[Range.events.DKEY].active - Range.logic.keyboard.inputs[Range.events.AKEY].active
+        YDirection = Range.logic.keyboard.inputs[Range.events.WKEY].active - Range.logic.keyboard.inputs[Range.events.SKEY].active
 
-        if onOrientation:
-            CharacterWrapper.walkDirection = instance.worldOrientation * (Vector([XDirection, YDirection, 0]).normalized() * speed)
+        Delta = Range.logic.deltaTime()
+        if orientation:
+            CharacterWrapper.walkDirection = (instance.worldOrientation * (Vector([XDirection * Delta, YDirection * Delta, 0]).normalized() * speed)) 
         else:
-            CharacterWrapper.walkDirection = Vector([XDirection, YDirection, 0]).normalized() * speed
+            CharacterWrapper.walkDirection = (Vector([XDirection * Delta, YDirection * Delta, 0]).normalized() * speed) 
 
         if Range.logic.keyboard.inputs[Range.events.SPACEKEY].activated:
             CharacterWrapper.jump()
@@ -263,7 +290,7 @@ class Behavior():
         locale = self.utils.getResolvePath(locale)
         instances = None
         if tag:
-            instances = self.getInstanceBy(tag, scene.objects)
+            instances = self.FindAllInstance(tag, scene.objects)
         else:
             instances = scene.objects
 
