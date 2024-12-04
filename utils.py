@@ -4,6 +4,15 @@ class Utils():
     def __init__(self, storage):
         self.storage = storage
 
+        self.startup_await = False
+
+    def GetStartupAwait(self):
+        real_information = None
+        if self.startup_await:
+            real_information = self.startup_await
+        self.startup_await = True
+        return real_information
+
     def GetLibraryPath(self, extendedPath: str = ""):
         """  """
 
@@ -146,6 +155,7 @@ class Utils():
                             self.SetRegister(insert['storage'], item)
 
         print(f"Manifest Load: {manifest['name']}, v{manifest['version'].get('current')}, {len(manifest.get('inserts'))} Insert(s)")
+        self.storage.RunCharge()
 
 
     def SetRegister(self, key: str, information) -> list:
@@ -177,7 +187,6 @@ class Utils():
 
     def SetLibrary(self, library: str, blendIn: str = None):
         """  """
-
         form_data_library = {
             'library': library,
             'type': 'Scene'

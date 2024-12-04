@@ -7,46 +7,23 @@ class Behavior():
         self.utils = utils
 
     # Getters
-    def GetSquareMatrix(self, amount: int):
-        """  """
 
-        find = int(math.sqrt(len(amount)))
-        if find * find == amount:
-            return find
-        else:
+    def GetRaycast(self, instance: object, distance: float = 0.0, target = (0,0,0), axi = None):
+        """  """
+        
+        destination = target
+        if axi != None:
+            destination = axi
+        hitObject, hitPosition, hitNormal = instance.rayCast(destination, instance.worldPosition, distance)
+
+        if hitObject == None:
             return None
-    
-    def GetVertexCenter(self, instance: object):
-        """  """
-
-        InstanceMesh = instance.meshes[0]
-        for vertice_index in range(InstanceMesh.getVertexArrayLength(0)):
-            vertice = InstanceMesh.getVertex(0, vertice_index)
-            vertice_global_position = instance.worldTransform * vertice.XYZ
-            if vertice_global_position == instance.worldPosition:
-                return {
-                    "vertice": vertice_index,
-                    "position": vertice_global_position
-                }
-            
-    def GetFarestDistanceVertex(self, instance: object):
-        """  """
-
-        InstanceMesh = instance.meshes[0]
-        farest_distance_vertex_length = -1
-        farest_distance_vertex = None
-
-        for vertice_index in range(InstanceMesh.getVertexArrayLength(0)):
-            vertice = InstanceMesh.getVertex(0, vertice_index)
-            vertice_global_position = instance.worldTransform * vertice.XYZ
-            distance = (vertice_global_position - instance.worldPosition).length
-            if distance > farest_distance_vertex_length:
-                farest_distance_vertex = distance
-                farest_distance_vertex_length = vertice_index
-        return { 
-            "vertice": farest_distance_vertex, 
-            "distance": farest_distance_vertex_length 
-        } 
+        else:
+            return [
+                hitObject,
+                hitPosition,
+                hitNormal
+            ]
 
     def GetMouseOver(self, distance = 99999, scene = Range.logic.getCurrentScene()) -> object:
         """  """
@@ -62,6 +39,13 @@ class Behavior():
             return {"object": hitObject, "position": hitPosition, "normal": hitNormal}
         else:
             return {}
+        
+    def GetRandomAreaPosition(self, scale: float, axis: str ="XYZ"):
+        return [
+            random.uniform(-scale, scale) if "X" in axis else 0.0,
+            random.uniform(-scale, scale) if "Y" in axis else 0.0,
+            random.uniform(-scale, scale) if "Z" in axis else 0.0,
+        ]
     
     def FindInstance(self, key: str, array: list, value = None):
         for instance in array:
@@ -136,11 +120,9 @@ class Behavior():
         """  """
 
         InstanceMesh = instance.meshes[0]
-
         for polygon in InstanceMesh.polygons:
             v1 = InstanceMesh.getVertex(0, polygon.v1).XYZ - InstanceMesh.getVertex(0, polygon.v2).XYZ
             v2 = InstanceMesh.getVertex(0, polygon.v3).XYZ - InstanceMesh.getVertex(0, polygon.v2).XYZ
-
             for vertice in polygon.vertices:
                 vertice.normal = v2.cross(v1).normalized()
         instance.reinstancePhysicsMesh()
@@ -179,7 +161,7 @@ class Behavior():
     def SetPositionGrid(self, mouse_sensor: object, instance: object, gap: float = 1.0):
         instance.worldPosition = mouse_sensor.hitObject.worldPosition + mouse_sensor.hitNormal / gap
     
-    def SetLookAt(self, instance: object, target: list, axi: str = "Z") -> Matrix:
+    def SetLookAt(self, instance: object, target: list, axi: str = "Z"):
         """  """
 
         orientation = [
@@ -206,12 +188,14 @@ class Behavior():
 
         instance.applyRotation([0.0, VDirection * speed, HDirection * speed], True)
     
-    def SetMouseLook(self, instance: object):
+    def SetMouseLook(self, instance: object, x: bool = True, y: bool = True):
         """  """
 
         delta = Range.logic.mouse.deltaPosition
-        instance.applyRotation([0 , 0, delta[0]], 0)
-        instance.applyRotation([delta[1] , 0, 0], 1)
+        if x:
+            instance.applyRotation([0 , 0, delta[0]], 0)
+        if y:
+            instance.applyRotation([delta[1] , 0, 0], 1)
     
     def SetLookForwardCamera(self, instance, camera):
         """  """
@@ -241,79 +225,17 @@ class Behavior():
     def SimpleMoviment(self, instance: object, speed: float = 1.0) -> Vector:
         """  """
 
-        if Range.logic.keyboard.inputs[Range.events.WKEY].active:
-            instance.applyMovement([speed,0,0], True)
-        elif Range.logic.keyboard.inputs[Range.events.SKEY].active:
-            instance.applyMovement([-speed,0,0], True)
-        if Range.logic.keyboard.inputs[Range.events.AKEY].active:
-            instance.applyMovement([0,speed,0], True)
-        elif Range.logic.keyboard.inputs[Range.events.DKEY].active:
-            instance.applyMovement([0,-speed,0], True)
+        XDirection = Range.logic.keyboard.inputs[Range.events.DKEY].active - Range.logic.keyboard.inputs[Range.events.AKEY].active
+        YDirection = Range.logic.keyboard.inputs[Range.events.WKEY].active - Range.logic.keyboard.inputs[Range.events.SKEY].active
         
+        instance.applyMovement([XDirection * speed, YDirection * speed, 0], True)
+
         return instance.worldPosition
-
-    def SeaMoviment(self, target: object, config: bool = False) -> object:
-        """  """
-
-        if not config:
-            target.worldPosition += target.worldOrientation.col[1] * target['relativeSpeed']
-
-        else:
-            if Range.logic.keyboard.inputs[Range.events.WKEY].active:
-                target['relativeSpeed'] += target['speed'] * 0.0000001
-            elif Range.logic.keyboard.inputs[Range.events.SKEY].active:
-                target['relativeSpeed'] -= target['speed'] * 0.0000001
-            if Range.logic.keyboard.inputs[Range.events.AKEY].active:
-                Euler_target = target.worldOrientation.to_euler()
-                Euler_target.z += target['relativeSpeed'] * 0.2
-                target.worldOrientation = Euler(Euler_target)
-            elif Range.logic.keyboard.inputs[Range.events.DKEY].active:
-                Euler_target = target.worldOrientation.to_euler()
-                Euler_target.z -= target['relativeSpeed'] * 0.2
-                target.worldOrientation = Euler(Euler_target)
-
-            if target['relativeSpeed'] < -0.0001:
-                target['relativeSpeed'] = -0.0001
-            if target['relativeSpeed'] > target['thresholdSpeed'] * 0.0000001:
-                target['relativeSpeed'] = target['thresholdSpeed'] * 0.0000001
-
-            target['absoluteSpeed'] = target['relativeSpeed'] * 10000
-
-        return target.worldPosition
     
-    def SetExternalCode(self, locale: str):
+    def UseExternalCode(self, locale: str):
         locale = self.utils.getResolvePath(locale)
         with open(locale, 'r') as file:
             exec(file.read())
-
-    def SetSaveScene(self, locale: str, file: str, tag: str = None, scene = Range.logic.getCurrentScene()):
-        locale = self.utils.getResolvePath(locale)
-        instances = None
-        if tag:
-            instances = self.FindAllInstance(tag, scene.objects)
-        else:
-            instances = scene.objects
-
-        if instances:
-            formInstances = []
-            for instance in instances:
-                formInstances.append({
-                    "name": instance.name,
-                    "position": list(instance.worldPosition),
-                    "color": list(instance.color)
-                })
-            self.utils.setJsonFile(locale, file, formInstances)
-        else:
-            return instances
-    
-    def SetLoadScene(self, locale: str, file: str, scene = Range.logic.getCurrentScene()):
-        locale = self.utils.getResolvePath(locale)
-        
-        if file:
-            instances = self.utils.getJsonFile(locale, file)
-            for instance in instances:
-                wrapper = scene.addObject(instance['name'], scene.objects[0])
-                wrapper.worldPosition = instance['position']
         
     # Actuators
 

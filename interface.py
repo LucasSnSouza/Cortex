@@ -111,23 +111,23 @@ class Interface():
                 InstanceComponent.worldScale = [
                     component['scale'][0],
                     component['scale'][1],
-                    0.0
+                    InstanceComponent.worldScale.z
                 ]
             if component.get('action'):
                 InstanceComponent['action'] = component['action']['type']
                 InstanceComponent['params'] = component['action']['params']
 
-            if component.get('__list__'):
-                if "@" in component['__list__']:
+            if component.get('list'):
+                if isinstance(component['list'], str):
                     ListRender(
-                        Range.logic.globalDict[component['__list__'].replace('@', "")],
+                        Range.logic.globalDict[component['list']],
                         component.get('columns'),
                         component.get('rows'),
                         component.get('gap')
                     )
                 else:
                     ListRender(
-                        component['__list__'],
+                        component['list'],
                         component.get('columns'),
                         component.get('rows'),
                         component.get('gap')
@@ -143,12 +143,8 @@ class Interface():
             match action:
                 case "Print":
                     print(f"{params['text']}")
-                case "Code":
-                    self.behavior.SetExternalCode(params['locale'])
-                case "SaveScene":
-                    self.behavior.SetSaveScene(params['locale'], 'teste.json', params['tag'], self.utils.GetScene(params['scene']))
-                case "LoadScene":
-                    self.behavior.SetLoadScene(params['locale'], 'teste.json', self.utils.GetScene(params['scene']))
+                case "UseCode":
+                    self.behavior.UseExternalCode(params['locale'])
                 case "SetValue":
                     if isinstance(params['variable'], list):
                         for indice, variable in enumerate(params['variable']):

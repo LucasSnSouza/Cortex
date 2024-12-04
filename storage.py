@@ -55,13 +55,30 @@ class Storage():
             "9": Range.events.NINEKEY,
             "0": Range.events.ZEROKEY,
         }
+        self.skips = {}
+
+    def SetSkip(self, skip: str, reset: int = 0):
+        self.skips[skip] = {
+            "value": 0,
+            "reset": reset,
+            "result": False
+        }
+
+    def RunSkip(self):
+        for skip, _ in self.skips.items():
+            if self.skips[skip]['value'] == self.skips[skip]['reset']:
+                self.skips[skip]['result'] = True
+                self.skips[skip]['value'] = 0
+            else:
+                self.skips[skip]['result'] = False
+                self.skips[skip]['value'] += 1
 
     def SetChargeFunction(self, function, params = None):
         """  """
         
         self.chargeFunctions.append({"function": function, "params": params})
 
-    def SetCharge(self):
+    def RunCharge(self):
         """  """
 
         if len(self.chargeFunctions) != 0:
@@ -88,6 +105,24 @@ class Storage():
             'content': function
         }
         return self.functions.get(key, None)
+    
+    def GetSkips(self) -> list:
+        """  """
+
+        keys = []
+        for key, sub_key in self.skips.items():
+            keys.append(key)
+        return keys
+    
+    def GetSkip(self, skip: str, delete: bool = False) -> bool:
+        """  """
+
+        if delete:
+            if skip in self.skips and self.skips[skip]['result']:
+                del self.skips[skip]
+                return True
+        if skip in self.skips:
+            return self.skips[skip]['result']
 
     def GetFunction(self, key: str, use: bool = False) -> dict:
         """  """

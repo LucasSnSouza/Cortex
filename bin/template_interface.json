@@ -1,0 +1,22 @@
+{
+    "layout": "Nome da variavel do objeto de referencia",
+    "_comment": "Ignore todos os _comment são apenas para comunicacao",
+    "components": [
+        {
+            "type": "Button",
+            "model": "Nome do objeto que sera renderizado",
+            "offset": [0.0, 0.0],
+            "z-index": 0,
+            "components": [
+                {
+                    "_comment": "O recurso components, sempre renderiza no sistema de pai e filho",
+                    "list": "@STORAGE_EnvorimentItems"
+                }
+            ],
+            "action": {
+                "type": "Nome da ação que o objeto deve executar, opcional.",
+                "params": "No formato {} deve passar os parametros que o tipo de ação solicita, verifique o manual."
+            }
+        }
+    ] 
+}
