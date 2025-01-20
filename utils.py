@@ -1,4 +1,6 @@
 import Range, os, json, socket # type: ignore
+from mathutils import Vector, Matrix, Euler, noise # type: ignore
+
 class Utils():
 
     def __init__(self, storage):
@@ -12,6 +14,15 @@ class Utils():
             real_information = self.startup_await
         self.startup_await = True
         return real_information
+
+    def GetRoamingPath(self):
+        """  """
+
+        getter_path = os.environ.get("APPDATA", None)
+        if "?" in getter_path:
+            return getter_path[4:]
+        else:
+            return getter_path
 
     def GetLibraryPath(self, extendedPath: str = ""):
         """  """
@@ -107,6 +118,32 @@ class Utils():
                                 'item': item
                             })
         return getter_dict_list
+    
+    def GetRGBNormalized(self, color: list) -> list:
+        """  """
+
+        if len(color) == 3:
+            return [color[0] / 255, color[1] / 255, color[2] / 255, 1.0]
+        elif len(color) == 4:
+            return [color[0] / 255, color[1] / 255, color[2] / 255, color[3] / 255]
+        else:
+            return None
+        
+    def GetDimensions(self, instance: object) -> list:
+        """  """
+
+        if instance is not None:
+            instance_mesh = instance.meshes[0]
+            collection = [[], [], []]
+            for mat_index in range(instance_mesh.numMaterials):
+                for vert_index in range(instance_mesh.getVertexArrayLength(mat_index)):
+                    vertice_XYZ = instance_mesh.getVertex(mat_index, vert_index).XYZ
+                    for i in range(3):
+                        collection[i].append(vertice_XYZ[i])
+            dimensions = Vector([max(axis) - min(axis) for axis in collection])
+            return dimensions
+        else:
+            return None
     
     def GetJsonFile(self, location: str, file: str) -> object:
         """  """

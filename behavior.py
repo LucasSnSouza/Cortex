@@ -135,6 +135,9 @@ class Behavior():
             return object[variable]
         else:
             return None
+        
+    def SetText(self, instance: object, value: str):
+        instance.text = value
 
     def BooleanToggle(self, object: object, variable: str) -> bool:
         """  """
@@ -233,7 +236,7 @@ class Behavior():
         return instance.worldPosition
     
     def UseExternalCode(self, locale: str):
-        locale = self.utils.getResolvePath(locale)
+        locale = self.utils.GetResolvePath(locale)
         with open(locale, 'r') as file:
             exec(file.read())
         
