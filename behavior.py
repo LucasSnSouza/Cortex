@@ -4,7 +4,10 @@ from mathutils import Vector, Matrix, Euler, noise # type: ignore
 class Behavior():
     def __init__(self, storage, utils):
         self.storage = storage
+        self.list = []
+        self.dict = {}
         self.utils = utils
+        self.onMovement = False
 
     # Getters
 
@@ -189,6 +192,8 @@ class Behavior():
         VDirection = Range.logic.keyboard.inputs[Range.events.PAD8].active - Range.logic.keyboard.inputs[Range.events.PAD2].active
         Delta = Range.logic.deltaTime()
 
+        self.onMovement = any([HDirection, VDirection])
+
         instance.applyRotation([0.0, VDirection * speed, HDirection * speed], True)
     
     def SetMouseLook(self, instance: object, x: bool = True, y: bool = True):
@@ -206,13 +211,15 @@ class Behavior():
         instance.lookAt(camera.worldOrientation.col[1], 1, 0.1)
         instance.lookAt([0,0,1], 2, 1)
 
-    def CharacterMoviment(self, instance: object, speed: float = 1.0, orientation: bool = True) -> Vector:
+    def CharacterMovement(self, instance: object, speed: float = 1.0, orientation: bool = True) -> Vector:
         """  """
 
         CharacterWrapper = Range.constraints.getCharacter(instance)
 
         XDirection = Range.logic.keyboard.inputs[Range.events.DKEY].active - Range.logic.keyboard.inputs[Range.events.AKEY].active
         YDirection = Range.logic.keyboard.inputs[Range.events.WKEY].active - Range.logic.keyboard.inputs[Range.events.SKEY].active
+
+        self.onMovement = any([XDirection, YDirection])
 
         Delta = Range.logic.deltaTime()
         if orientation:
@@ -225,13 +232,32 @@ class Behavior():
 
         return instance.worldPosition
 
-    def SimpleMoviment(self, instance: object, speed: float = 1.0) -> Vector:
+    def SimpleMovement(self, instance: object, speed: float = 1.0) -> Vector:
         """  """
 
         XDirection = Range.logic.keyboard.inputs[Range.events.DKEY].active - Range.logic.keyboard.inputs[Range.events.AKEY].active
         YDirection = Range.logic.keyboard.inputs[Range.events.WKEY].active - Range.logic.keyboard.inputs[Range.events.SKEY].active
         
+        self.onMovement = any([XDirection, YDirection])
+
         instance.applyMovement([XDirection * speed, YDirection * speed, 0], True)
+
+        return instance.worldPosition
+    
+    def AxisMovement(self, instance: object, speed: float = 1.0, axis="X") -> Vector:
+        """  """
+
+        XDirection = Range.logic.keyboard.inputs[Range.events.DKEY].active - Range.logic.keyboard.inputs[Range.events.AKEY].active
+        YDirection = Range.logic.keyboard.inputs[Range.events.WKEY].active - Range.logic.keyboard.inputs[Range.events.SKEY].active
+        ZDirection = Range.logic.keyboard.inputs[Range.events.WKEY].active - Range.logic.keyboard.inputs[Range.events.SKEY].active
+
+        self.onMovement = any([XDirection, YDirection])
+
+        instance.applyMovement([
+            (XDirection * speed) if "X" in axis else 0, 
+            (YDirection * speed) if "Y" in axis else 0, 
+            (ZDirection * speed) if "Z" in axis else 0
+        ], True)
 
         return instance.worldPosition
     

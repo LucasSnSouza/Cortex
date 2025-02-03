@@ -95,8 +95,7 @@ class Interface():
                 column += 1
                 if column >= columns:
                     column = 0
-                    row += 1
-                
+                    row += 1                
 
         if component['model'] in scene.objectsInactive:
 

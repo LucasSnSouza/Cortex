@@ -16,7 +16,8 @@ class Storage():
                 }
         }
         self.chargeFunctions = []
-        self.serverClients = []
+        self.list = []
+        self.dict = {}
         self.directions = {
             "X": [1.0,0.0,0.0],
             "-X": [-1.0,0.0,0.0],
