@@ -1,5 +1,7 @@
-import Range, os, json, socket # type: ignore
+import Range, os, json, socket, re # type: ignore
 from mathutils import Vector, Matrix, Euler, noise # type: ignore
+from dicttoxml import dicttoxml
+import xml.etree.ElementTree as XML
 
 class Utils():
 
@@ -138,9 +140,9 @@ class Utils():
             for mat_index in range(instance_mesh.numMaterials):
                 for vert_index in range(instance_mesh.getVertexArrayLength(mat_index)):
                     vertice_XYZ = instance_mesh.getVertex(mat_index, vert_index).XYZ
-                    for i in range(3):
-                        collection[i].append(vertice_XYZ[i])
-            dimensions = Vector([max(axis) - min(axis) for axis in collection])
+                for i in range(3):
+                    collection[i].append(vertice_XYZ[i])
+                    dimensions = Vector([max(axis) - min(axis) for axis in collection])
             return dimensions
         else:
             return None
@@ -150,6 +152,23 @@ class Utils():
         
         with open(f"{location}/{file}", 'r', encoding='utf-8') as archive:
             return json.load(archive)
+        
+    def GetFile(self, location: str, file: str) -> object:
+        """  """
+        
+        with open(f"{location}/{file}", 'r', encoding='utf-8') as archive:
+            return archive.read()
+        
+    def GetCDATA(self, text):
+        return re.sub(r"<!\[CDATA\[(.*?)\]\]>", r"\1", text, flags=re.DOTALL)
+    
+    def GetXMLFile(self, location: str, file: str) -> object:
+        """  """
+        
+        return XML.parse(f"{location}/{file}")
+
+    def DictToXML(self, json: dict):
+        return dicttoxml(json)
     
     # Setters
     def SetJsonFile(self, location: str, file: str, content: object):
@@ -179,14 +198,18 @@ class Utils():
                 elif insert.get('action') == "storage":
                     for item in insert['data']:
                         if '__external__' in item:
-                            external_content_data = self.GetJsonFile(location, item['__external__'])
-                            if isinstance(external_content_data, dict):
-                                self.SetRegister(insert['storage'], self.GetJsonFile(location, item['__external__']))
-                            elif isinstance(external_content_data, list):
-                                for data in external_content_data:
-                                   self.SetRegister(insert['storage'], data)
+                            external_content_data = None
+                            if 'json' in item['__external__']:
+                                external_content_data = self.GetJsonFile(location, item['__external__'])
+                                if isinstance(external_content_data, dict):
+                                    self.SetRegister(insert['storage'], self.GetJsonFile(location, item['__external__']))
+                                elif isinstance(external_content_data, list):
+                                    for data in external_content_data:
+                                        self.SetRegister(insert['storage'], data)
+                            elif 'xml' in item['__external__']:
+                                self.SetRegister(insert['storage'], self.GetFile(location, item['__external__']))
                             else:
-                                print("NOT: O tipo do valor externo não correponde ao esperado")
+                                pass
 
                         else:
                             self.SetRegister(insert['storage'], item)

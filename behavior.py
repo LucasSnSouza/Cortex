@@ -1,4 +1,4 @@
-import Range, random, copy, math, os # type: ignore
+import Range, random, copy, math, os, uuid # type: ignore
 from mathutils import Vector, Matrix, Euler, noise # type: ignore
 
 class Behavior():
@@ -8,6 +8,8 @@ class Behavior():
         self.dict = {}
         self.utils = utils
         self.onMovement = False
+        self.FlyVector = Vector((0,0,0))
+        self.RotationVector = Vector((0,0,0))
 
     # Getters
 
@@ -72,10 +74,12 @@ class Behavior():
     
     # Setters
 
-    def SetAddObject(self, instance: str, reference: str, scene = Range.logic.getCurrentScene()):
-        return scene.addObject(instance, reference)
+    def AddObject(self, instance: str, reference: str, scene = Range.logic.getCurrentScene()):
+        element = scene.addObject(instance, reference)
+        element['uuid'] = uuid.uuid1()
+        return element
     
-    def SetEndObject(self, instance: str):
+    def EndObject(self, instance: str):
         return instance.endObject()
 
     def SetTerrainPaint(self, instance: object, waterLevel: float = 1.0):
@@ -129,6 +133,19 @@ class Behavior():
             for vertice in polygon.vertices:
                 vertice.normal = v2.cross(v1).normalized()
         instance.reinstancePhysicsMesh()
+
+    def LightManager(self, reference: object, sources: list, lights: list, distance: float):
+        sorted_sources = sorted(sources, key=lambda source: reference.getDistanceTo(source))
+        
+        for i, light in enumerate(lights):
+            if i < len(sorted_sources):
+                source = sorted_sources[i]
+                light.worldPosition = source.worldPosition
+                light.energy = source.get('energy', 1.0)
+                light.color = source.color[:-1]
+            else:
+                light.energy = 0.0
+
 
     def SetValue(self, object: object, variable: str, value):
         """  """
@@ -186,24 +203,25 @@ class Behavior():
 
         return instance.worldOrientation
     
-    def SetApplyRotation(self, instance: object, speed: float, direction_proxy = ['H', 'V']):
+    def SetApplyRotation(self, instance: object, rotation: float):
 
-        HDirection = Range.logic.keyboard.inputs[Range.events.PAD6].active - Range.logic.keyboard.inputs[Range.events.PAD4].active
-        VDirection = Range.logic.keyboard.inputs[Range.events.PAD8].active - Range.logic.keyboard.inputs[Range.events.PAD2].active
-        Delta = Range.logic.deltaTime()
-
-        self.onMovement = any([HDirection, VDirection])
-
-        instance.applyRotation([0.0, VDirection * speed, HDirection * speed], True)
+        if Range.logic.keyboard.inputs[Range.events.PAD8].activated:
+            instance.applyRotation([0.0, rotation, 0.0], True)
+        elif Range.logic.keyboard.inputs[Range.events.PAD2].activated:
+            instance.applyRotation([0.0, -rotation, 0.0], True)
+        elif Range.logic.keyboard.inputs[Range.events.PAD6].activated:
+            instance.applyRotation([0.0, 0.0, rotation], True)
+        elif Range.logic.keyboard.inputs[Range.events.PAD4].activated:
+            instance.applyRotation([0.0, 0.0, -rotation], True)
     
-    def SetMouseLook(self, instance: object, x: bool = True, y: bool = True):
+    def SetMouseLook(self, instance: object, speed: float = 1.0, x: bool = True, y: bool = True):
         """  """
 
         delta = Range.logic.mouse.deltaPosition
         if x:
-            instance.applyRotation([0 , 0, delta[0]], 0)
+            instance.applyRotation([0 , 0, delta[0] * speed], 0)
         if y:
-            instance.applyRotation([delta[1] , 0, 0], 1)
+            instance.applyRotation([delta[1] * speed , 0, 0], 1)
     
     def SetLookForwardCamera(self, instance, camera):
         """  """
@@ -231,6 +249,16 @@ class Behavior():
             CharacterWrapper.jump()
 
         return instance.worldPosition
+    
+    def SimpleRotation(self, instance: object, speed: float, direction_proxy = ['H', 'V']):
+
+        HDirection = Range.logic.keyboard.inputs[Range.events.PAD6].active - Range.logic.keyboard.inputs[Range.events.PAD4].active
+        VDirection = Range.logic.keyboard.inputs[Range.events.PAD8].active - Range.logic.keyboard.inputs[Range.events.PAD2].active
+        Delta = Range.logic.deltaTime()
+
+        self.onMovement = any([HDirection, VDirection])
+
+        instance.applyRotation([0.0, VDirection * speed, HDirection * speed], True)
 
     def SimpleMovement(self, instance: object, speed: float = 1.0) -> Vector:
         """  """
@@ -241,6 +269,36 @@ class Behavior():
         self.onMovement = any([XDirection, YDirection])
 
         instance.applyMovement([XDirection * speed, YDirection * speed, 0], True)
+
+        return instance.worldPosition
+    
+    def FlightMovement(self, speed: float = 1.0, directions:str = "XYZ"):
+        """ """
+
+        XDirection = Range.logic.keyboard.inputs[Range.events.DKEY].active - Range.logic.keyboard.inputs[Range.events.AKEY].active if 'X' in directions else 0.0
+        YDirection = Range.logic.keyboard.inputs[Range.events.WKEY].active - Range.logic.keyboard.inputs[Range.events.SKEY].active if 'Y' in directions else 0.0
+        ZDirection = Range.logic.keyboard.inputs[Range.events.EKEY].active - Range.logic.keyboard.inputs[Range.events.QKEY].active if 'Z' in directions else 0.0
+
+        if any([XDirection, YDirection, ZDirection]):
+            InputVector = Vector((XDirection, YDirection, ZDirection)) * speed
+            self.FlyVector += InputVector
+
+        return self.FlyVector
+
+    def DisplacementMovement(self, instance: object, vector: Vector):
+        for index, direction in enumerate(vector):
+            instance.worldPosition[index] += direction
+
+    def CameraMovement(self, instance: object, speed: float = 1.0) -> Vector:
+        """  """
+
+        XDirection = Range.logic.keyboard.inputs[Range.events.DKEY].active - Range.logic.keyboard.inputs[Range.events.AKEY].active
+        YDirection = Range.logic.keyboard.inputs[Range.events.EKEY].active - Range.logic.keyboard.inputs[Range.events.QKEY].active
+        ZDirection = Range.logic.keyboard.inputs[Range.events.WKEY].active - Range.logic.keyboard.inputs[Range.events.SKEY].active
+        
+        self.onMovement = any([XDirection, YDirection, ZDirection])
+
+        instance.applyMovement([XDirection * speed, YDirection * speed, -ZDirection * speed], True)
 
         return instance.worldPosition
     
