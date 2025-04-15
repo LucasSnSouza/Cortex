@@ -1,5 +1,6 @@
 import Range, random, copy, math, os, uuid # type: ignore
 from mathutils import Vector, Matrix, Euler, noise # type: ignore
+from datetime import datetime, timedelta
 
 class Behavior():
     def __init__(self, storage, utils):
@@ -52,6 +53,18 @@ class Behavior():
             random.uniform(-scale, scale) if "Z" in axis else 0.0,
         ]
     
+    def VerifyVector(self, vector: list, vectors: list):
+        for vect in vectors:
+            if vector == Vector(self.storage.directions[vect]):
+                return True
+        return False
+    
+    def VerifyDateGreater(self, From: datetime, To: datetime):
+        if From > To:
+            return True
+        else:
+            return False
+    
     def FindInstance(self, key: str, array: list, value = None):
         for instance in array:
             if value != None:
@@ -82,48 +95,7 @@ class Behavior():
     def EndObject(self, instance: str):
         return instance.endObject()
 
-    def SetTerrainPaint(self, instance: object, waterLevel: float = 1.0):
-        """  """
-
-        InstanceMesh = instance.meshes[0]
-        for vertice_index in range(InstanceMesh.getVertexArrayLength(0)):
-            vertice = InstanceMesh.getVertex(0, vertice_index)
-            vertice_global_position = instance.worldTransform * vertice.XYZ
-
-            vertice.color = [0.0,1.0,0.0,1.0]
-
-            if vertice.normal[2] < 0.60:
-                vertice.color = [0.0,0.0,0.1,1.0]
-            
-            if vertice_global_position[2] < waterLevel:
-                vertice.color = [1.0,0.0,0.0,1.0]
-
-    def SetGenerateTerrain(self, instance: object, island: bool = False):
-        """  """
-
-        instance.worldPosition = [
-            random.uniform(-100,100),
-            random.uniform(-100,100),
-            random.uniform(-100,100),
-        ]
-
-        InstanceMesh = instance.meshes[0]
-        main_vertice = ( instance.worldTransform * InstanceMesh.getVertex(0, self.GetVertexCenter(instance)['vertice']).XYZ )
-        farest_length_vertex = 20.0
-        
-        for vertice_index in range(InstanceMesh.getVertexArrayLength(0)):
-            vertice = InstanceMesh.getVertex(0, vertice_index)
-            vertice_global_position = instance.worldTransform * vertice.XYZ
-            distance = (vertice_global_position - main_vertice).length
-            inverted_distance = max(0.0, farest_length_vertex - distance)
-
-            hetero_terrain_type = noise.fractal(vertice_global_position * 0.2, 1.0, 200.0, 8)
-            fractal_terrain_type = noise.multi_fractal(vertice_global_position * 0.003, 1.0, 100.0, 6)
-            vertice.z = (hetero_terrain_type * fractal_terrain_type) * -inverted_distance 
-
-        instance.worldPosition = [0,0,0]
-
-    def SetRecalculateNormals(self, instance: object):
+    def NormalsNormalized(self, instance: object):
         """  """
 
         InstanceMesh = instance.meshes[0]
@@ -181,29 +153,16 @@ class Behavior():
 
         return instance
     
-    def SetPositionGrid(self, mouse_sensor: object, instance: object, gap: float = 1.0):
-        instance.worldPosition = mouse_sensor.hitObject.worldPosition + mouse_sensor.hitNormal / gap
-    
-    def SetLookAt(self, instance: object, target: list, axi: str = "Z"):
+    def LookAt(self, instance: object, target: list, axi: str = "Z"):
         """  """
 
-        orientation = [
-            target[0] - instance.worldPosition[0],
-            target[1] - instance.worldPosition[1]
-        ]
-        angle = math.atan2(orientation[1], orientation[0])
-        instance.worldOrientation = Euler(
-            (
-                angle if axi == "X" else 0, 
-                angle if axi == "Y" else 0, 
-                angle if axi == "Z" else 0
-            ), 
-            'XYZ'
-        )
-
-        return instance.worldOrientation
+        target_x, target_y = target.worldPosition.x, target.worldPosition.y
+        pos_x, pos_y = instance.worldPosition.x, instance.worldPosition.y
+        angle = math.atan2(target_y - pos_y, target_x - pos_x)
+        
+        instance.worldOrientation = Euler((0, 0, angle), 'XYZ')
     
-    def SetApplyRotation(self, instance: object, rotation: float):
+    def ApplyRotation(self, instance: object, rotation: float):
 
         if Range.logic.keyboard.inputs[Range.events.PAD8].activated:
             instance.applyRotation([0.0, rotation, 0.0], True)
@@ -214,7 +173,7 @@ class Behavior():
         elif Range.logic.keyboard.inputs[Range.events.PAD4].activated:
             instance.applyRotation([0.0, 0.0, -rotation], True)
     
-    def SetMouseLook(self, instance: object, speed: float = 1.0, x: bool = True, y: bool = True):
+    def MouseLook(self, instance: object, speed: float = 1.0, x: bool = True, y: bool = True):
         """  """
 
         delta = Range.logic.mouse.deltaPosition
@@ -223,7 +182,7 @@ class Behavior():
         if y:
             instance.applyRotation([delta[1] * speed , 0, 0], 1)
     
-    def SetLookForwardCamera(self, instance, camera):
+    def LookForwardCamera(self, instance, camera):
         """  """
 
         instance.lookAt(camera.worldOrientation.col[1], 1, 0.1)
