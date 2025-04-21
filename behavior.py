@@ -8,8 +8,9 @@ class Behavior():
         self.list = []
         self.dict = {}
         self.utils = utils
-        self.onMovement = False
+        self.MovementVector = ((0,0,0))
         self.FlyVector = Vector((0,0,0))
+        self.SailVector = Vector((0,0,0))
         self.RotationVector = Vector((0,0,0))
 
     # Getters
@@ -215,8 +216,6 @@ class Behavior():
         VDirection = Range.logic.keyboard.inputs[Range.events.PAD8].active - Range.logic.keyboard.inputs[Range.events.PAD2].active
         Delta = Range.logic.deltaTime()
 
-        self.onMovement = any([HDirection, VDirection])
-
         instance.applyRotation([0.0, VDirection * speed, HDirection * speed], True)
 
     def SimpleMovement(self, instance: object, speed: float = 1.0) -> Vector:
@@ -224,14 +223,25 @@ class Behavior():
 
         XDirection = Range.logic.keyboard.inputs[Range.events.DKEY].active - Range.logic.keyboard.inputs[Range.events.AKEY].active
         YDirection = Range.logic.keyboard.inputs[Range.events.WKEY].active - Range.logic.keyboard.inputs[Range.events.SKEY].active
-        
-        self.onMovement = any([XDirection, YDirection])
 
-        instance.applyMovement([XDirection * speed, YDirection * speed, 0], True)
+        self.MovementVector = Vector([XDirection * speed, YDirection * speed, 0])
 
-        return instance.worldPosition
+        return self.MovementVector
     
-    def FlightMovement(self, speed: float = 1.0, directions:str = "XYZ"):
+    def AircraftMovement(self, speed: float = 1.0, directions:str = "XYZ"):
+        """ """
+
+        XDirection = Range.logic.keyboard.inputs[Range.events.DKEY].active - Range.logic.keyboard.inputs[Range.events.AKEY].active if 'X' in directions else 0.0
+        YDirection = Range.logic.keyboard.inputs[Range.events.WKEY].active - Range.logic.keyboard.inputs[Range.events.SKEY].active if 'Y' in directions else 0.0
+        ZDirection = Range.logic.keyboard.inputs[Range.events.EKEY].active - Range.logic.keyboard.inputs[Range.events.QKEY].active if 'Z' in directions else 0.0
+
+        if any([XDirection, YDirection, ZDirection]):
+            InputVector = Vector((XDirection, YDirection, ZDirection)) * speed
+            self.FlyVector += InputVector
+
+        return self.FlyVector
+    
+    def NavalMovement(self, speed: float = 1.0, directions:str = "XYZ"):
         """ """
 
         XDirection = Range.logic.keyboard.inputs[Range.events.DKEY].active - Range.logic.keyboard.inputs[Range.events.AKEY].active if 'X' in directions else 0.0
