@@ -53,6 +53,9 @@ class Behavior():
             random.uniform(-scale, scale) if "Y" in axis else 0.0,
             random.uniform(-scale, scale) if "Z" in axis else 0.0,
         ]
+
+    def GetDimensions(self, reference: object):
+        return reference.cullingBox.max - reference.cullingBox.min
     
     def VerifyVector(self, vector: list, vectors: list):
         for vect in vectors:
